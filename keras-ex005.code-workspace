@@ -1,0 +1,18 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"python.defaultInterpreterPath": "_internal\\python-3.8.10\\python.exe",
+		"terminal.integrated.env.windows": {
+			"PATH": "_internal\\CUDA;_internal\\python-3.8.10\\Scripts;_internal\\python-3.8.10;${env:PATH}",
+		},
+		"terminal.integrated.env.osx": {
+		},
+	    "terminal.integrated.env.linux": {
+		},
+		"python.pythonPath": "_internal\\python-3.8.10\\python.exe",
+	},
+}
