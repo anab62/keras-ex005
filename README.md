@@ -1,68 +1,92 @@
 # keras-ex005
-<<<<<<< HEAD
-* Mp4動画の変換のため、本編とその他を区別する方法についての実装例
-チュートリアルなどのコードをそのまま使ってもメモリ消費が追いつかずエラーになる。
-（GPUメモリだけでなくCPUメモリも）
-* 画像を対象とした解析だけでなく、音声データも解析してみた。本編やCMの切り替え時に
-0.5sの無音が入る規程があるそうだが、それを利用する
-* ノイズキャンセルのデータも作成してみた。
+* Mp4動画の軽量化を目的に、本編とその他（CM。番組案内等）を区別する方法についての実装例
+* 「画像の特徴」抽出のため、Kerasのチュートリアルにあるコードを利用した。そのまま使ってもメモリ消費が追いつかずエラーになる（GPUメモリだけでなくCPUメモリも）。なので、画像データを一度に読み込まず都度読み込むように調整している
+* 本編とその他（CM。番組案内等）を分ける方法は４種類程度存在すると思われる。「音声種類」「無音部分」「画像の特徴」「字幕」。他にもあるかも知れないがよく知らない。ここでは「画像の特徴」を利用。特に「Watermarks透かし」に着目した
+* 本サンプル実装の別の目的は、「画像の特徴」抽出が極めて単純なニューラルネットワークモデルで処理できるということを体感してもらうことにある。昨今生成ＡＩ等の論文で紹介されている深層学習モデルは非常に複雑で、（日本でいうなら）中学・高校レベルの知識では理解できないものだ。ＡＩといっても単純なものの積み重ねだということを体感してほしい。
 
 #### 注意すること
 
-* python、tensorflow, keras, NVIDIAの版数に注意
-* gitのリモート先あり
+* python、tensorflow, keras, NVIDIAの版数に注意。github掲載版ではNVIDIA搭載を想定しないのであまり気にする必要はない。CUDAライブラリ等は同梱していない
+* 本サンプル実装では、元動画から10秒毎に640x360の画像を切り出し、その四隅を「Watermarks透かし」表示部分としている。それぞれの画像に手作業でクラスを設定して学習させることになる。
+* 10秒ごとの画像で「Watermarks透かし」の存在と種類を学習するが、学習済モデルを使ったCMカット時も（本サンプル実装では）10秒単位で処理している。きめ細かいCMカット処理をしたければ「10秒単位」を「1秒単位」にするなど工夫の余地がある
+* 実際のクラス判定では誤判定が生じる。本サンプル実装では誤判定かどうかにかかわらず移動平均をとって補正している。移動平均の期間や補正の閾値は適当に設定しており、最適とは限らない
 
 ## 各フォルダの意味や目的
 ### _internal
-### checkpoint.xxx
+* 学習とクラス判定に必要なpython環境。`python-3.8.10-embed-amd64.zip`をベースに必要最小限の`site-packages`にして構築している。インタネットに接続した環境にて、同梱した`configure-py38.bat`を実行すれば`requirements.txt`相当のsite-packagesをインストールしてくれる。構築後の容量は1GBを越える
+* 動画編集アプリ（FFMPEG）。かなり古いものだが本サンプル実装の範囲では問題なく動作する
+
 ### scripts
-学習済モデルを使って元MP4ファイルからCMをカットしたMP4を作成する
-### watermarks
-学習用データ
+
+* `cut_cm_on_mp4.bat`
+学習済モデルを使って元MP4ファイルからCMをカットしたMP4を作成する。
+ここにMp4ファイルをDrag＆Dropすればコードが走ってCM（だとモデルが判定したもの）をカットしたMP4を新規作成する。上の説明にもあるが10秒程度の解像度で切り分けるので多少の誤差がある。CMより本編を優先するように調整しているがそれも完全ではない。
+
+* `partition_mp4_template.bat`
+自動生成される`partition_mp4.bat`の冒頭部分を記載するテンプレート
+
+* `concat_mp4.bat`
+`filelist.txt`にある切り出し動画を順番に張り付けてmp4を新規作成する
+
+* `checkpoints_conv_cm_160x90x3`
+クラス判定時にここにある重みデータを参照する。追加学習時はここに上書きすればいい
+
+* `config_pc.ini`
+環境依存の値の設定。win版がある。
+
+
+### watermarks（学習データ）
+
+* CATV等で配信している動画の「Watermarks透かし」表示部分を切り出した画像群。元動画から10秒毎に640x360の画像を切り出し、その四隅を「Watermarks透かし」表示部分としている。「Watermarks透かし」が四隅のどこに配置されていても学習によって特徴として抽出してくれるようだ。
+
 #### 作成手順
-* フォルダを新規作成する。フォルダ名は局名にちなんだものでよい。
+* フォルダを新規作成する。フォルダ名は局名にちなんだものでよい
 * 学習に使うmp4ファイルを、上記フォルダに配置する
-* 直下にある`get_masked_from_mp4.bat`をフォルダにCOPYする。
-* `get_masked_from_mp4.bat`の内容を変更する。
-* Win10コマンドとして`get_masked_from_mp4.bat`を実行する。
-* `tf_keras_conv_cm_prepare_data.py`を実行する
-* `watermarks.tsv`を`watermarks_NN_XXX.tsv`変更して保存する
+* `tf_keras_conv_cm_prepare_data.bat`を実行する。実行前にコード中のフォルダ名を上記のフォルダ名に一致させておく。
+作成された`watermarks.tsv`には画像名とクラスIDの対応が書かれており、初期値は0（CM）になっている
+* `watermarks.tsv`を`watermarks_NN_XXX.tsv`変更して保存する。NNは局名（にちなんだもの）。XXXは枚数。XXXはなくてもよい。
+肉眼で画像を確認して画像名とクラスIDの対応内容を修正する。
 * `watermarks_NN_XXX.tsv`すべてをcatして`watermarks.tsv`を再作成する
+
 #### 学習手順
-* `tf_keras_conv_cm_160x90x3.py`を実行する
-### misc
+* Windowsエクスプローラなどで`tf_keras_conv_cm_train.bat`をダブルクリックして実行する。内部で`tf_keras_conv_cm_160x90x3.py`が呼ばれる
+
 #### log
-#### grid
-#### output
+各種ログの出力フォルダ。
 
 ## root下のファイル
 
-* tf_keras_conv_cm_160x90x3_predict.py
-学習済モデルを使って本編の切り替わりを推定する
-* tf_keras_conv_cm_160x90x3.py
-モデルを学習する
-* check_platform.py
+* `tf_keras_conv_cm_160x90x3_predict.py`
+学習済モデルを使って本編の切り替わりを推定する。`scripts/cut_cm_on_mp4.bat`から呼ばれる
+* `tf_keras_conv_cm_160x90x3.py`
+モデルを学習する。`tf_keras_conv_cm_train.bat`から呼ばれる
+* `tf_keras_conv_cm_concat_corners.py`
+予め切り取っておいた四隅の画像を貼り合わせる
+* `tf_keras_conv_cm_prepare_data.py`
+学習もしくはクラス判定する対象画像（jpgまたはpng）について、ファイル名とクラスIDを対応づけたTSVファイルを作成する。`tf_keras_conv_cm_prepare_data.bat`から呼ばれる
+* `checkpoints_conv_cm_160x90x3`
+（追加）学習時に重みファイルがここに保存される。現時点では、実験のために日本の地上波・BS・CSの画像データを使って学習した結果（重みファイル）が格納されている。（追加）学習時はコード修正・学習データ準備等が必要になる。
+* `watermarks.tsv`
+`watermarks`フォルダにある上記画像群とクラス（CMまたは局）とを対応づけたTSVファイル
+* `check_platform.py`
 環境チェック
-* keras-ex005.code-workspace
-python interpreterの設定やデバッグ時オプション指定、など
-
-* keras_movmean_wav_51ch.py
-WAVファイルを入力して5.1chのトラックに分ける。plotする
-* keras_movmean_wav.py
-WAVファイルを入力して移動平均した波形を出力する。plotする
-* keras_fft_wav.py
-WAVファイルを入力して高速フーリエ変換する
-* adjust_adts_acc.py
-ネットから拾ったコード
+* `keras-ex005.code-workspace`
+VScode用ファイル。python interpreterの設定やデバッグ時オプション指定、など
 
 #### requirements.txt
 
-```reuirements.txt
+windows10-64bit
 python: 3.8.10
-tensoflow:
-keras:
+
+```reuirements.txt
+numpy==1.24.4
+Pillow==9.5.0
+tensoflow==2.10.0
+keras==2.10.0
+matplotlib==3.7.0
+scikit-learn==1.2.1
 ```
+`python-3.8.10-embed-amd64.zip`をベースに必要最小限の`site-packages`にして構築している。GPU(NVIDIA)を利用しないのであれば適当な版数でも動く。ノートPCでも動作する。
+
 
 以上
-=======
->>>>>>> refs/remotes/origin/master
