@@ -131,56 +131,10 @@ dmypy.json
 #
 # for this project
 #
-migrations/
-.idea/
 
-log/logm.*
-tools/log/logm_tool.*
-*.error
+_internal/python-3.8.10/
 
-env.txt
-env.*
+#grid/
+#watermarks/
 
-test/
-#doc/
-
-id_rsa
-db.*
-
-nginx_static/
-*.json
-
-_internal/
-model/
-model_saved/
-model_saved_002/
-model_saved_002/
-
-*.txt
-logs/
-training_checkpoints/
-training_1/
-aclImdb/
-
-*.tsv
-*.origin
-
-log/
-*.tar.gz
-
-savedmodel/
-
-*.pickle
-
-grid/
-watermarks/
-
-*.jpg
-
-output/
-# scripts/checkpoints_conv_cm_160x90x3
 scripts/temp
-scripts/temp2
-scripts/output
-
-*.mp4
