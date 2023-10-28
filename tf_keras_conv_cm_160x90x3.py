@@ -22,7 +22,7 @@ config = {
     "data_dir": 'watermarks',  # face only so 
     "epochs": 10,
     "batch_size": 128,  # 128
-    "label_size": 22,
+    "label_size": 23,  # 23
     # "model_hdf5" : 'model_vae.hdf5',
 }
 
@@ -31,7 +31,7 @@ class_names = ['CM',
                'DLIFE', 'ANIMAL', 'DISCOVER', 'HIST', 'MPLUS',
                'NATIO', 'NECO', 'NIHON', 'TOUEI', 'FUJI',
                'NPNTV', 'TBS', 'TKYMX', 'TVASAHI', 'BSNTV',
-               'BS12'
+               'BS12', 'ACTION'
                ]
 assert len(class_names) == config['label_size']
 

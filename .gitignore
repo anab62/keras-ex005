@@ -138,3 +138,6 @@ _internal/python-3.8.10/
 #watermarks/
 
 scripts/temp
+scripts/checkpoints_conv_cm_160x90x3
+checkpoints_conv_cm_160x90x3
+checkpoints_conv_cm_160x90x3.prev
